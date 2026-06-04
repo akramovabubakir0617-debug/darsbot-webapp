@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>DarsBot - Talaba Xaritasi</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0e1a;
+    --bg2: #0d1425;
+    --card: #111827;
+    --border: #1e3a5f;
+    --accent: #00d4ff;
+    --accent2: #7c3aed;
+    --accent3: #f59e0b;
+    --gold: #ffd700;
+    --green: #10b981;
+    --red: #ef4444;
+    --text: #e2e8f0;
+    --muted: #64748b;
+    --glow: 0 0 20px rgba(0,212,255,0.4);
+    --glow2: 0 0 20px rgba(124,58,237,0.4);
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Exo 2', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Animated background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse at 20% 20%, rgba(0,212,255,0.06) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 80%, rgba(124,58,237,0.06) 0%, transparent 50%),
+      radial-gradient(ellipse at 50% 50%, rgba(245,158,11,0.03) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Grid overlay */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,212,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,212,255,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container { position:relative; z-index:1; padding: 16px; max-width: 480px; margin: 0 auto; }
+
+  /* HEADER */
+  .header {
+    text-align: center;
+    padding: 20px 0 16px;
+    animation: fadeDown 0.6s ease;
+  }
+  .header-title {
+    font-family: 'Orbitron', monospace;
+    font-size: 22px;
+    font-weight: 900;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+  .header-sub { font-size: 12px; color: var(--muted); margin-top: 4px; letter-spacing: 1px; }
+
+  /* PROFILE CARD */
+  .profile-card {
+    background: linear-gradient(135deg, #111827 0%, #0f1729 100%);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 20px;
+    margin-bottom: 16px;
+    position: relative;
+    overflow: hidden;
+    animation: fadeUp 0.5s ease 0.1s both;
+  }
+  .profile-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--accent), var(--accent2), transparent);
+  }
+
+  .profile-top { display: flex; align-items: center; gap: 16px; }
+  .avatar {
+    width: 64px; height: 64px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 26px;
+    font-family: 'Orbitron', monospace;
+    font-weight: 900;
+    color: white;
+    box-shadow: var(--glow);
+    flex-shrink: 0;
+    position: relative;
+  }
+  .avatar-ring {
+    position: absolute;
+    inset: -4px;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    background: linear-gradient(var(--bg2), var(--bg2)) padding-box,
+                linear-gradient(135deg, var(--accent), var(--accent2)) border-box;
+    animation: spin 4s linear infinite;
+  }
+
+  .profile-info { flex: 1; }
+  .profile-name { font-size: 17px; font-weight: 700; color: white; }
+  .profile-group { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .profile-rank {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(245,158,11,0.1);
+    border: 1px solid rgba(245,158,11,0.3);
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-size: 12px;
+    color: var(--accent3);
+    margin-top: 8px;
+    font-weight: 600;
+  }
+
+  .stats-row {
+    display: grid; grid-template-columns: repeat(3,1fr);
+    gap: 10px; margin-top: 16px;
+  }
+  .stat-box {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px 8px;
+    text-align: center;
+  }
+  .stat-val {
+    font-family: 'Orbitron', monospace;
+    font-size: 20px;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .stat-label { font-size: 10px; color: var(--muted); margin-top: 2px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+  /* XP BAR */
+  .xp-section { margin-top: 14px; }
+  .xp-header { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); margin-bottom: 6px; }
+  .xp-bar-bg {
+    height: 8px; background: rgba(255,255,255,0.06);
+    border-radius: 99px; overflow: hidden;
+  }
+  .xp-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    border-radius: 99px;
+    box-shadow: 0 0 10px rgba(0,212,255,0.5);
+    transition: width 1s ease;
+  }
+
+  /* LEVEL BADGE */
+  .level-badge {
+    position: absolute;
+    top: 16px; right: 16px;
+    width: 44px; height: 44px;
+    background: linear-gradient(135deg, var(--accent3), #ef6c00);
+    border-radius: 12px;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    box-shadow: 0 0 16px rgba(245,158,11,0.4);
+  }
+  .level-badge span:first-child { font-size: 8px; color: rgba(255,255,255,0.7); text-transform: uppercase; }
+  .level-badge span:last-child { font-family: 'Orbitron'; font-size: 16px; font-weight: 900; color: white; }
+
+  /* TABS */
+  .tabs {
+    display: flex; gap: 4px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 4px;
+    margin-bottom: 16px;
+    animation: fadeUp 0.5s ease 0.2s both;
+  }
+  .tab {
+    flex: 1; padding: 10px;
+    text-align: center; cursor: pointer;
+    border-radius: 10px;
+    font-size: 12px; font-weight: 600;
+    color: var(--muted);
+    transition: all 0.2s;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .tab.active {
+    background: linear-gradient(135deg, rgba(0,212,255,0.15), rgba(124,58,237,0.15));
+    color: var(--accent);
+    border: 1px solid rgba(0,212,255,0.2);
+  }
+
+  /* TAB PANELS */
+  .tab-panel { display: none; animation: fadeUp 0.3s ease; }
+  .tab-panel.active { display: block; }
+
+  /* MAP SECTION */
+  .map-container {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 20px;
+    animation: fadeUp 0.5s ease 0.3s both;
+    position: relative;
+    overflow: hidden;
+  }
+  .map-title {
+    font-family: 'Orbitron', monospace;
+    font-size: 13px;
+    color: var(--accent);
+    margin-bottom: 20px;
+    display: flex; align-items: center; gap: 8px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .map-title::before {
+    content: '';
+    width: 8px; height: 8px;
+    background: var(--accent);
+    border-radius: 50%;
+    box-shadow: var(--glow);
+    animation: pulse 2s ease infinite;
+  }
+
+  /* Path visualization */
+  .lesson-path {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    position: relative;
+  }
+
+  .lesson-row {
+    display: flex;
+    align-items: center;
+    position: relative;
+    padding: 6px 0;
+  }
+
+  .lesson-row:nth-child(even) { flex-direction: row-reverse; }
+  .lesson-row:nth-child(even) .lesson-info { text-align: right; }
+
+  .lesson-node {
+    width: 52px; height: 52px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 2;
+    cursor: pointer;
+    transition: transform 0.2s;
+  }
+  .lesson-node:active { transform: scale(0.92); }
+
+  .lesson-node.done {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    box-shadow: 0 0 20px rgba(0,212,255,0.5);
+  }
+  .lesson-node.current {
+    background: linear-gradient(135deg, var(--accent3), #ef6c00);
+    box-shadow: 0 0 20px rgba(245,158,11,0.6);
+    animation: nodePulse 2s ease infinite;
+  }
+  .lesson-node.locked {
+    background: rgba(255,255,255,0.05);
+    border: 2px solid rgba(255,255,255,0.1);
+  }
+
+  .lesson-node-inner { font-size: 20px; }
+  .lesson-node .node-num {
+    position: absolute;
+    bottom: -2px; right: -2px;
+    width: 18px; height: 18px;
+    background: var(--bg);
+    border-radius: 50%;
+    font-size: 9px;
+    font-family: 'Orbitron', monospace;
+    font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    border: 1px solid var(--border);
+  }
+  .lesson-node.done .node-num { color: var(--accent); }
+  .lesson-node.locked .node-num { color: var(--muted); }
+
+  .connector {
+    flex: 1;
+    height: 3px;
+    position: relative;
+    overflow: hidden;
+  }
+  .connector-line {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    border-radius: 3px;
+  }
+  .connector.done .connector-line {
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    box-shadow: 0 0 8px rgba(0,212,255,0.4);
+  }
+  .connector.partial .connector-line {
+    background: linear-gradient(90deg, var(--accent2), rgba(255,255,255,0.1));
+  }
+  .connector.locked .connector-line { background: rgba(255,255,255,0.08); }
+
+  /* Dashed animation */
+  .connector.active .connector-line::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent, rgba(0,212,255,0.6), transparent);
+    animation: shimmer 1.5s linear infinite;
+  }
+
+  .lesson-info {
+    flex: 1;
+    padding: 0 12px;
+  }
+  .lesson-name { font-size: 13px; font-weight: 600; color: var(--text); }
+  .lesson-status { font-size: 10px; margin-top: 2px; }
+  .lesson-status.done { color: var(--green); }
+  .lesson-status.current { color: var(--accent3); }
+  .lesson-status.locked { color: var(--muted); }
+  .lesson-score { font-size: 11px; color: var(--accent); font-weight: 600; }
+
+  /* LEADERBOARD */
+  .section-title {
+    font-family: 'Orbitron', monospace;
+    font-size: 13px;
+    color: var(--accent);
+    margin-bottom: 14px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    display: flex; align-items: center; gap: 8px;
+  }
+
+  .leader-list { display: flex; flex-direction: column; gap: 8px; }
+
+  .leader-item {
+    display: flex; align-items: center; gap: 12px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 12px 14px;
+    transition: all 0.2s;
+    animation: fadeUp 0.4s ease both;
+    cursor: pointer;
+  }
+  .leader-item:hover { border-color: rgba(0,212,255,0.3); background: rgba(0,212,255,0.05); }
+  .leader-item.top1 {
+    background: linear-gradient(135deg, rgba(255,215,0,0.08), rgba(255,165,0,0.04));
+    border-color: rgba(255,215,0,0.3);
+    box-shadow: 0 0 20px rgba(255,215,0,0.1);
+  }
+  .leader-item.top2 {
+    background: rgba(192,192,192,0.05);
+    border-color: rgba(192,192,192,0.2);
+  }
+  .leader-item.top3 {
+    background: rgba(205,127,50,0.05);
+    border-color: rgba(205,127,50,0.2);
+  }
+  .leader-item.me {
+    border-color: rgba(0,212,255,0.4);
+    background: rgba(0,212,255,0.06);
+  }
+
+  .leader-rank {
+    font-family: 'Orbitron', monospace;
+    font-size: 18px;
+    font-weight: 900;
+    width: 30px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+  .rank-1 { color: var(--gold); text-shadow: 0 0 10px rgba(255,215,0,0.6); }
+  .rank-2 { color: #c0c0c0; }
+  .rank-3 { color: #cd7f32; }
+  .rank-other { color: var(--muted); font-size: 14px; }
+
+  .leader-avatar {
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700;
+    font-size: 15px;
+    flex-shrink: 0;
+  }
+  .leader-info { flex: 1; }
+  .leader-name { font-size: 14px; font-weight: 600; }
+  .leader-group { font-size: 11px; color: var(--muted); }
+  .leader-score {
+    font-family: 'Orbitron', monospace;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--accent);
+    flex-shrink: 0;
+  }
+  .leader-score span { font-size: 10px; color: var(--muted); }
+
+  .me-badge {
+    background: rgba(0,212,255,0.15);
+    border: 1px solid rgba(0,212,255,0.3);
+    border-radius: 6px;
+    font-size: 9px;
+    padding: 2px 6px;
+    color: var(--accent);
+    font-weight: 700;
+    margin-left: 4px;
+  }
+
+  /* STATS SECTION */
+  .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .stat-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 16px;
+    animation: fadeUp 0.4s ease both;
+  }
+  .stat-card.full { grid-column: 1 / -1; }
+  .stat-icon { font-size: 24px; margin-bottom: 8px; }
+  .stat-card-val {
+    font-family: 'Orbitron', monospace;
+    font-size: 22px;
+    font-weight: 700;
+  }
+  .stat-card-val.cyan { color: var(--accent); }
+  .stat-card-val.purple { color: var(--accent2); }
+  .stat-card-val.gold { color: var(--accent3); }
+  .stat-card-val.green { color: var(--green); }
+  .stat-card-label { font-size: 11px; color: var(--muted); margin-top: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+  .monthly-timer {
+    background: linear-gradient(135deg, rgba(124,58,237,0.15), rgba(0,212,255,0.08));
+    border: 1px solid rgba(124,58,237,0.3);
+    border-radius: 16px;
+    padding: 16px;
+    text-align: center;
+    margin-bottom: 14px;
+  }
+  .timer-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+  .timer-val {
+    font-family: 'Orbitron', monospace;
+    font-size: 28px;
+    font-weight: 900;
+    background: linear-gradient(135deg, var(--accent2), var(--accent));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .timer-sub { font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+  .prize-section {
+    background: linear-gradient(135deg, rgba(255,215,0,0.08), rgba(245,158,11,0.04));
+    border: 1px solid rgba(255,215,0,0.2);
+    border-radius: 16px;
+    padding: 16px;
+    text-align: center;
+  }
+  .prize-emoji { font-size: 36px; margin-bottom: 8px; }
+  .prize-title { font-size: 14px; font-weight: 700; color: var(--gold); }
+  .prize-desc { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .prize-winners { display: flex; justify-content: center; gap: 16px; margin-top: 12px; }
+  .prize-winner { text-align: center; }
+  .prize-winner-medal { font-size: 20px; }
+  .prize-winner-name { font-size: 11px; color: var(--text); font-weight: 600; margin-top: 4px; }
+
+  /* BOTTOM NAV */
+  .bottom-nav {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background: rgba(10,14,26,0.95);
+    backdrop-filter: blur(20px);
+    border-top: 1px solid var(--border);
+    display: flex;
+    padding: 8px 0 calc(8px + env(safe-area-inset-bottom));
+    z-index: 100;
+  }
+  .nav-item {
+    flex: 1; display: flex; flex-direction: column;
+    align-items: center; gap: 4px;
+    cursor: pointer;
+    padding: 6px 0;
+    transition: all 0.2s;
+  }
+  .nav-item.active .nav-icon { color: var(--accent); filter: drop-shadow(0 0 6px rgba(0,212,255,0.6)); }
+  .nav-item.active .nav-label { color: var(--accent); }
+  .nav-icon { font-size: 20px; transition: all 0.2s; }
+  .nav-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
+
+  .content-area { padding-bottom: 80px; }
+
+  /* ANIMATIONS */
+  @keyframes fadeDown { from { opacity:0; transform:translateY(-20px); } to { opacity:1; transform:translateY(0); } }
+  @keyframes fadeUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+  @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+  @keyframes pulse { 0%,100% { opacity:1; transform:scale(1); } 50% { opacity:0.6; transform:scale(0.8); } }
+  @keyframes nodePulse { 0%,100% { box-shadow: 0 0 20px rgba(245,158,11,0.6); } 50% { box-shadow: 0 0 35px rgba(245,158,11,0.9); } }
+  @keyframes shimmer { from { transform:translateX(-100%); } to { transform:translateX(100%); } }
+  @keyframes float { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-4px); } }
+
+  .float { animation: float 3s ease infinite; }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    <div class="header-title">🎓 DarsBot</div>
+    <div class="header-sub">ONLINE TA'LIM PLATFORMASI</div>
+  </div>
+
+  <div class="content-area">
+
+    <!-- PROFILE CARD -->
+    <div class="profile-card" id="profileCard">
+      <div class="level-badge">
+        <span>LVL</span>
+        <span id="lvlNum">7</span>
+      </div>
+      <div class="profile-top">
+        <div class="avatar">
+          <div class="avatar-ring"></div>
+          <span id="avatarLetter">A</span>
+        </div>
+        <div class="profile-info">
+          <div class="profile-name" id="studentName">Abdullayev Alisher</div>
+          <div class="profile-group" id="studentGroup">📚 Guruh: CS-101 • 2-kurs</div>
+          <div class="profile-rank">🏆 <span id="rankText">Reytingda 3-o'rin</span></div>
+        </div>
+      </div>
+      <div class="stats-row">
+        <div class="stat-box">
+          <div class="stat-val" id="totalScore">340</div>
+          <div class="stat-label">Umumiy ball</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-val" id="monthScore">120</div>
+          <div class="stat-label">Oylik ball</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-val" id="streak">8🔥</div>
+          <div class="stat-label">Ketma-ket kun</div>
+        </div>
+      </div>
+      <div class="xp-section">
+        <div class="xp-header">
+          <span>⚡ LVL 7 → LVL 8</span>
+          <span id="xpText">340 / 400 XP</span>
+        </div>
+        <div class="xp-bar-bg">
+          <div class="xp-bar-fill" id="xpBar" style="width: 85%"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TABS -->
+    <div class="tabs">
+      <div class="tab active" onclick="switchTab('map')">🗺 Xarita</div>
+      <div class="tab" onclick="switchTab('rating')">🏆 Reyting</div>
+      <div class="tab" onclick="switchTab('stats')">📊 Statistika</div>
+    </div>
+
+    <!-- MAP TAB -->
+    <div class="tab-panel active" id="tab-map">
+      <div class="map-container">
+        <div class="map-title">Dars Xaritasi</div>
+        <div class="lesson-path" id="lessonPath"></div>
+      </div>
+    </div>
+
+    <!-- RATING TAB -->
+    <div class="tab-panel" id="tab-rating">
+      <div class="section-title">🏆 TOP-10 Reyting</div>
+      <div class="leader-list" id="leaderList"></div>
+    </div>
+
+    <!-- STATS TAB -->
+    <div class="tab-panel" id="tab-stats">
+      <div class="monthly-timer">
+        <div class="timer-label">⏳ Musobaqa tugashiga</div>
+        <div class="timer-val" id="countdown">15K : 23S : 41D</div>
+        <div class="timer-sub">Har oyning oxiri yangi boshlang'ich!</div>
+      </div>
+
+      <div class="stats-grid" style="margin-bottom:14px">
+        <div class="stat-card" style="animation-delay:0.1s">
+          <div class="stat-icon">✅</div>
+          <div class="stat-card-val green" id="doneCount">8</div>
+          <div class="stat-card-label">Bajarilgan vazifalar</div>
+        </div>
+        <div class="stat-card" style="animation-delay:0.15s">
+          <div class="stat-icon">📅</div>
+          <div class="stat-card-val cyan" id="attendCount">10</div>
+          <div class="stat-card-label">Davomat (kunlar)</div>
+        </div>
+        <div class="stat-card" style="animation-delay:0.2s">
+          <div class="stat-icon">⚡</div>
+          <div class="stat-card-val purple" id="avgScore">85%</div>
+          <div class="stat-card-label">O'rtacha ball</div>
+        </div>
+        <div class="stat-card" style="animation-delay:0.25s">
+          <div class="stat-icon">🎯</div>
+          <div class="stat-card-val gold" id="missCount">2</div>
+          <div class="stat-card-label">O'tkazilgan darslar</div>
+        </div>
+      </div>
+
+      <div class="prize-section">
+        <div class="prize-emoji float">🎁</div>
+        <div class="prize-title">Oylik Mukofot — Iyun 2025</div>
+        <div class="prize-desc">TOP-3 talabalar maxsus sovg'a oladi!</div>
+        <div class="prize-winners">
+          <div class="prize-winner">
+            <div class="prize-winner-medal">🥇</div>
+            <div class="prize-winner-name">Karimov J.</div>
+          </div>
+          <div class="prize-winner">
+            <div class="prize-winner-medal">🥈</div>
+            <div class="prize-winner-name">Toshmatov S.</div>
+          </div>
+          <div class="prize-winner">
+            <div class="prize-winner-medal">🥉</div>
+            <div class="prize-winner-name">Nazarova M.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ===== DATA =====
+const lessons = [
+  { id:1, name:'Kirish darsi', emoji:'🚀', status:'done', score:10, maxScore:10, task:'Bajarildi', attendance:true },
+  { id:2, name:'Asosiy tushunchalar', emoji:'📖', status:'done', score:9, maxScore:10, task:'Bajarildi', attendance:true },
+  { id:3, name:'Amaliyot 1', emoji:'💻', status:'done', score:10, maxScore:10, task:'Bajarildi', attendance:true },
+  { id:4, name:'Nazariya 2', emoji:'🧠', status:'done', score:8, maxScore:10, task:'Bajarildi', attendance:true },
+  { id:5, name:'Loyiha 1', emoji:'🎨', status:'done', score:10, maxScore:10, task:'Bajarildi', attendance:true },
+  { id:6, name:'Test 1', emoji:'📝', status:'done', score:7, maxScore:10, task:'Bajarildi', attendance:false },
+  { id:7, name:'Murakkab mavzu', emoji:'⚙️', status:'done', score:9, maxScore:10, task:'Bajarildi', attendance:true },
+  { id:8, name:'Qo\'shimcha material', emoji:'📚', status:'done', score:8, maxScore:10, task:'Bajarildi', attendance:true },
+  { id:9, name:'Joriy dars', emoji:'🔥', status:'current', score:0, maxScore:10, task:'Kutilmoqda', attendance:false },
+  { id:10, name:'Loyiha 2', emoji:'🚧', status:'locked', score:0, maxScore:10, task:'Qulflangan', attendance:false },
+  { id:11, name:'Test 2', emoji:'🔒', status:'locked', score:0, maxScore:10, task:'Qulflangan', attendance:false },
+  { id:12, name:'Yakuniy imtihon', emoji:'🏁', status:'locked', score:0, maxScore:10, task:'Qulflangan', attendance:false },
+];
+
+const leaders = [
+  { rank:1, name:'Karimov Jasur', group:'CS-101', score:520, color:'#f59e0b', initials:'KJ', isMe:false },
+  { rank:2, name:'Toshmatov Sanjar', group:'CS-102', score:490, color:'#7c3aed', initials:'TS', isMe:false },
+  { rank:3, name:'Nazarova Malika', group:'CS-101', score:420, color:'#10b981', initials:'NM', isMe:false },
+  { rank:4, name:'Abdullayev Alisher', group:'CS-101', score:340, color:'#00d4ff', initials:'AA', isMe:true },
+  { rank:5, name:'Yusupov Bobur', group:'CS-103', score:310, color:'#ef4444', initials:'YB', isMe:false },
+  { rank:6, name:'Rahimova Dilnoza', group:'CS-102', score:290, color:'#f97316', initials:'RD', isMe:false },
+  { rank:7, name:'Mirzayev Otabek', group:'CS-101', score:270, color:'#06b6d4', initials:'MO', isMe:false },
+  { rank:8, name:'Xasanova Zulfiya', group:'CS-103', score:250, color:'#8b5cf6', initials:'XZ', isMe:false },
+  { rank:9, name:'Ergashev Firdavs', group:'CS-102', score:220, color:'#84cc16', initials:'EF', isMe:false },
+  { rank:10, name:'Qodirov Sherzod', group:'CS-101', score:200, color:'#ec4899', initials:'QS', isMe:false },
+];
+
+// ===== RENDER LESSONS =====
+function renderLessons() {
+  const path = document.getElementById('lessonPath');
+  path.innerHTML = '';
+  lessons.forEach((l, i) => {
+    const row = document.createElement('div');
+    row.className = 'lesson-row';
+
+    // connector before (except first)
+    if (i > 0) {
+      const prev = lessons[i-1];
+      const connStatus = prev.status === 'done' ? (l.status === 'done' || l.status === 'current' ? 'done' : 'partial') : 'locked';
+      const active = l.status === 'current' ? ' active' : '';
+      row.innerHTML += `<div class="connector ${connStatus}${active}"><div class="connector-line"></div></div>`;
+    }
+
+    // node
+    const nodeClass = l.status;
+    const emoji = l.status === 'locked' ? '🔒' : l.emoji;
+    row.innerHTML += `
+      <div class="lesson-node ${nodeClass}" onclick="showLesson(${l.id})">
+        <span class="lesson-node-inner">${emoji}</span>
+        <span class="node-num">${l.id}</span>
+      </div>`;
+
+    // info
+    const statusLabel = { done:'✅ Bajarildi', current:'🔥 Joriy dars', locked:'🔒 Qulflangan' };
+    const statusClass = l.status;
+    const scoreStr = l.status === 'done' ? `<div class="lesson-score">+${l.score}/${l.maxScore} ball</div>` : '';
+    const attendStr = l.attendance ? '📅 Davomat: ✓' : (l.status === 'done' ? '📅 Davomat: ✗' : '');
+    row.innerHTML += `
+      <div class="lesson-info">
+        <div class="lesson-name">${l.name}</div>
+        <div class="lesson-status ${statusClass}">${statusLabel[l.status]}</div>
+        ${scoreStr}
+        ${l.status === 'done' ? `<div style="font-size:10px;color:var(--muted);margin-top:2px">${attendStr}</div>` : ''}
+      </div>`;
+
+    path.appendChild(row);
+  });
+}
+
+// ===== RENDER LEADERS =====
+function renderLeaders() {
+  const list = document.getElementById('leaderList');
+  list.innerHTML = '';
+  leaders.forEach((l, i) => {
+    const rankClass = ['','top1','top2','top3'][l.rank] || '';
+    const rankIcon = l.rank === 1 ? '🥇' : l.rank === 2 ? '🥈' : l.rank === 3 ? '🥉' : l.rank;
+    const rankNumClass = l.rank <= 3 ? `rank-${l.rank}` : 'rank-other';
+    const meClass = l.isMe ? ' me' : '';
+    const meBadge = l.isMe ? '<span class="me-badge">SIZ</span>' : '';
+    const delay = `animation-delay: ${i * 0.05}s`;
+    list.innerHTML += `
+      <div class="leader-item ${rankClass}${meClass}" style="${delay}">
+        <div class="leader-rank ${rankNumClass}">${rankIcon}</div>
+        <div class="leader-avatar" style="background: linear-gradient(135deg, ${l.color}33, ${l.color}22); color:${l.color}; border: 1px solid ${l.color}44">${l.initials}</div>
+        <div class="leader-info">
+          <div class="leader-name">${l.name}${meBadge}</div>
+          <div class="leader-group">${l.group}</div>
+        </div>
+        <div class="leader-score">${l.score}<br><span>ball</span></div>
+      </div>`;
+  });
+}
+
+// ===== TABS =====
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach((t,i) => {
+    t.classList.toggle('active', ['map','rating','stats'][i] === name);
+  });
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+}
+
+// ===== LESSON DETAIL =====
+function showLesson(id) {
+  const l = lessons.find(x => x.id === id);
+  if (!l || l.status === 'locked') return;
+
+  const tg = window.Telegram?.WebApp;
+  if (tg) {
+    tg.showPopup({
+      title: `${l.emoji} ${l.name}`,
+      message: `📊 Ball: ${l.score}/${l.maxScore}\n📅 Davomat: ${l.attendance ? 'Ha ✅' : 'Yo\'q ❌'}\n📋 Vazifa: ${l.task}`,
+      buttons: [{ type: 'ok', text: 'Yopish' }]
+    });
+  } else {
+    alert(`${l.emoji} ${l.name}\nBall: ${l.score}/${l.maxScore}\nDavomat: ${l.attendance ? 'Ha' : "Yo'q"}`);
+  }
+}
+
+// ===== COUNTDOWN =====
+function updateCountdown() {
+  const now = new Date();
+  const endOfMonth = new Date(now.getFullYear(), now.getMonth()+1, 0, 23, 59, 59);
+  const diff = endOfMonth - now;
+  const d = Math.floor(diff / 86400000);
+  const h = Math.floor((diff % 86400000) / 3600000);
+  const m = Math.floor((diff % 3600000) / 60000);
+  document.getElementById('countdown').textContent = `${d}K : ${String(h).padStart(2,'0')}S : ${String(m).padStart(2,'0')}D`;
+}
+
+// ===== TELEGRAM INIT =====
+const tg = window.Telegram?.WebApp;
+if (tg) {
+  tg.ready();
+  tg.expand();
+  tg.setHeaderColor('#0a0e1a');
+  tg.setBackgroundColor('#0a0e1a');
+  // Get user data from initData
+  const user = tg.initDataUnsafe?.user;
+  if (user) {
+    const name = [user.first_name, user.last_name].filter(Boolean).join(' ');
+    document.getElementById('studentName').textContent = name || 'Talaba';
+    document.getElementById('avatarLetter').textContent = (user.first_name?.[0] || 'T').toUpperCase();
+  }
+}
+
+// ===== INIT =====
+renderLessons();
+renderLeaders();
+updateCountdown();
+setInterval(updateCountdown, 60000);
+</script>
+</body>
+</html>
